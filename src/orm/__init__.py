@@ -2,15 +2,19 @@
 Management tools and objects for database ORM.
 """
 
+from datetime import datetime
+
+import config
+
+import common, orm
 from orm import bases, messages, tickets, users
-from orm.engine import orm_engine, orm_session, select
+from orm.engine import orm_engine, orm_session, select, update
 
 __all__ = (
 (
     "messages",
     "tickets",
     "users",
-
     "initialize",
     "orm_engine",
     "orm_session",
@@ -23,15 +27,15 @@ def initialize():
     Creates all the tables for the database.
     """
 
-    bases.BaseObject.metadata.create_all(orm_engine())
+    orm.bases.BaseObject.metadata.create_all(orm_engine())
 
     members = lambda e: [m for m in e.__members__]
     enum_pairs =\
     (
-        (users.UserRole, users.UserRoleEnum),
-        (users.UserStatus, users.UserStatusEnum),
-        (tickets.TicketKind, tickets.TicketKindEnum),
-        (tickets.TicketStatus, tickets.TicketStatusEnum)
+        (orm.users.UserRole, orm.users.UserRoleEnum),
+        (orm.users.UserStatus, orm.users.UserStatusEnum),
+        (orm.tickets.TicketKind, orm.tickets.TicketKindEnum),
+        (orm.tickets.TicketStatus, orm.tickets.TicketStatusEnum)
     )
 
     record_buffer = []
@@ -48,3 +52,33 @@ def initialize():
 
         # Refresh the record buffer.
         record_buffer.clear()
+
+    # Builds the initial administrator instance.
+    init_time = common.current_timestamp()
+    admin_inst = orm.users.User\
+    (
+        id=config.APPLICATION_UUID,
+        role="administrator",
+        status="enabled",
+        is_active=True,
+        hashed_password=config.APPLICATION_PASSWORD,
+        user_contacts=orm.users.UserContact
+        (
+            owner_id=config.APPLICATION_UUID,
+            username=config.APPLICATION_USERNAME,
+            first_name="",
+            last_name="",
+            phone_number="",
+            user_email_addresses=[],
+            created_at=init_time,
+            updated_on=init_time
+        ),
+        user_sessions=[],
+        service_tickets=[],
+        created_at=init_time,
+        updated_on=init_time
+    )
+
+    with orm_session() as session:
+        session.add(admin_inst)
+        session.commit()

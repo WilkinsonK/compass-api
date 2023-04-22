@@ -1,8 +1,10 @@
 """Global configuration for this project."""
 
-import enum, os, pathlib
+import enum, os, pathlib, uuid
 
 import dotenv
+
+import common
 
 __version__ = (0, 0, 0)
 
@@ -34,14 +36,26 @@ DEV_DISABLED = DevMode.DISABLED
 DEV_BASIC = DevMode.BASIC
 DEV_DEBUG = DevMode.DEBUG
 
-DEVELOPMENT_MODE = DevMode[os.getenv("DEVELOPMENT_MODE", "DISABLED").upper()]
+DEVELOPMENT_MODE =\
+    DevMode[os.getenv("COMPASS_DEVELOPMENT_MODE", "DISABLED").upper()]
+
+SECURITY_PASSWORD_HASHES = ()
+SECURITY_SESSION_TTL = {"minutes": 30}
+
+# Application specific constants. These are not
+# meant to change at runtime in prodution.
 APPLICATION_ROOT = pathlib.Path(__file__).parents[1]
+APPLICATION_UUID =\
+    uuid.UUID(bytes=os.getenv("COMPASS_UUID", "0000000000000000").encode())
+APPLICATION_PASSWORD =\
+    common.rotate_password_hash(b"asdf1234", *SECURITY_PASSWORD_HASHES)
+APPLICATION_USERNAME = "CompassAdmin"
 
 # Database ORM related settings
-ORM_USERNAME = os.getenv("ORM_USERNAME", None)
-ORM_PASSWORD = os.getenv("ORM_PASSWORD", None)
-ORM_HOSTNAME = os.getenv("ORM_HOSTNAME", None)
-ORM_DATABASE = os.getenv("ORM_DATABASE", None)
+ORM_USERNAME = os.getenv("COMPASS_ORM_USERNAME", None)
+ORM_PASSWORD = os.getenv("COMPASS_ORM_PASSWORD", None)
+ORM_HOSTNAME = os.getenv("COMPASS_ORM_HOSTNAME", None)
+ORM_DATABASE = os.getenv("COMPASS_ORM_DATABASE", None)
 
 # Logging related settings
 LOGGING_CONFIG = os.getenv("COMPASS_LOG_CONFIG", None)
