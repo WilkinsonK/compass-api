@@ -4,6 +4,8 @@ import enum, os, pathlib
 
 import dotenv
 
+__version__ = (0, 0, 0)
+
 # Load environment from .env file if there is one.
 dotenv.load_dotenv()
 
