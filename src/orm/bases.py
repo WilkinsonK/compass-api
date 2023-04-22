@@ -34,7 +34,6 @@ class EnumMixIn(object):
 
 
 class HistoricalMixIn(object):
-        
     created_at: Mapped[datetime_t] = mapped_column\
     (
         "created_on",
@@ -49,10 +48,7 @@ class HistoricalMixIn(object):
 
 
 class IdMixIn(object):
-
-    @declared_attr
-    def id(cls) -> MappedUUIDColumn:
-        return mapped_column("id", UUID(), primary_key=True)
+    id: MappedUUID = mapped_column("id", UUID(True), primary_key=True)
 
 
 class UserOwnerMixIn(object):

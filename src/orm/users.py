@@ -7,9 +7,6 @@ from orm.bases import mapped_column, relationship
 from orm.bases import BaseObject, EnumMixIn, HistoricalMixIn, IdMixIn
 from orm.bases import UserOwnerMixIn, MappedUUID, MappedStr, Mapped
 
-# Dummy types. We replace these in other object
-# files.
-
 
 # --------------------------------------------- #
 # User Objects.
@@ -97,8 +94,8 @@ class UserContact(BaseObject, UserOwnerMixIn, HistoricalMixIn):
 class User(BaseObject, IdMixIn, HistoricalMixIn):
     __tablename__ = "users"
 
-    role: MappedUUID = mapped_column(ForeignKey("user_role.name"))
-    status: MappedUUID = mapped_column("status", ForeignKey("user_status.name"))
+    role: Mapped["UserRole"] = mapped_column(ForeignKey("user_role.name"))
+    status: Mapped["UserStatus"] = mapped_column("status", ForeignKey("user_status.name"))
     is_active: Mapped[bool] = mapped_column("is_active", Boolean())
     hashed_password: Mapped[bytes] = mapped_column("hashed_password", BINARY(512))
 

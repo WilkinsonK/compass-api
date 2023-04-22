@@ -1,9 +1,17 @@
 import contextlib
 
 import sqlalchemy, sqlalchemy.orm
-from sqlalchemy import select
+from sqlalchemy import select, update
 
 import config
+
+__all__ =\
+(
+    "select",
+    "update",
+    "orm_engine",
+    "orm_session"
+)
 
 # Determines the connection_string used in our
 # ORM. If in development mode, creates a SQLite
@@ -27,7 +35,8 @@ else:
 _orm_engine = sqlalchemy.create_engine\
 (
     connection_string,
-    echo=(config.DEVELOPMENT_MODE is config.DEV_DEBUG)
+    echo=(config.DEVELOPMENT_MODE is config.DEV_DEBUG),
+    future=True
 )
 del connection_string
 del config.ORM_PASSWORD # Drop reference to password.

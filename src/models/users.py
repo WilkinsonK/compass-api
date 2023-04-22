@@ -44,13 +44,13 @@ UserContact.update_forward_refs()
 
 if __name__ == "__main__":
     import dataclasses, hashlib, pprint, uuid
-    import orm.users as users
+    import orm
 
     ADMIN_UUID = uuid.uuid4()
     ADMIN_USERNAME = "compass-admin"
     ADMIN_HASHED_PASSWORD = hashlib.sha1(b"HumpDay", usedforsecurity=True).digest()
 
-    orm_user_contact = users.UserContact\
+    orm_user_contact = orm.users.UserContact\
     (
         owner_id=ADMIN_UUID,
         username=ADMIN_USERNAME,
@@ -62,7 +62,7 @@ if __name__ == "__main__":
         updated_on=DateTimeField.now(),
     )
 
-    orm_user = users.User\
+    orm_user = orm.users.User\
     (
         id=ADMIN_UUID,
         role="administrator",
@@ -80,6 +80,6 @@ if __name__ == "__main__":
     pprint.pp(pyd_user)
 
     orm_user = pyd_user.dict()
-    orm_user["user_contacts"] = users.UserContact(**orm_user["user_contacts"])
-    orm_user = users.User(**orm_user)
+    orm_user["user_contacts"] = orm.users.UserContact(**orm_user["user_contacts"])
+    orm_user = orm.users.User(**orm_user)
     pprint.pp(orm_user)
