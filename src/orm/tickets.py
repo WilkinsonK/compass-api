@@ -2,9 +2,9 @@ import enum
 
 from sqlalchemy import ForeignKey, String
 
-from orm.bases import declared_attr, mapped_column, relationship
+from orm.bases import mapped_column, relationship
 from orm.bases import BaseObject, EnumMixIn, HistoricalMixIn, IdMixIn
-from orm.bases import UserOwnerMixIn
+from orm.bases import UserOwnerMixIn, MappedStr
 
 
 # Dummy types. We replace these in other object
@@ -49,26 +49,13 @@ class TicketStatusEnum(enum.StrEnum):
 class ServiceTicket(IdMixIn, HistoricalMixIn, UserOwnerMixIn, BaseObject):
     __tablename__ = "service_tickets"
 
-    @declared_attr
-    def short_description(cls):
-        return mapped_column("short_description", String(64))
-
-    @declared_attr
-    def long_description(cls):
-        return mapped_column("long_description", String(512))
-
-    @declared_attr
-    def kind(cls):
-        return mapped_column("kind", ForeignKey("ticket_kinds.name"))
-
-    @declared_attr
-    def status(cls):
-        return mapped_column("status", ForeignKey("ticket_status.name"))
+    short_description: MappedStr = mapped_column("short_description", String(64))
+    long_description: MappedStr = mapped_column("long_description", String(512))
+    kind: MappedStr = mapped_column("kind", ForeignKey("ticket_kinds.name"))
+    status: MappedStr = mapped_column("status", ForeignKey("ticket_status.name"))
 
     # Object relationships
-    @declared_attr
-    def messages(cls):
-        return relationship\
+    messages: MappedStr = relationship\
         (
             "Message",
             collection_class=list,
