@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "compass-api"
+description = "Core API for the Compass project."
+authors = [
+    {name = "Keenan W. Wilkinson", email = "keenanwilkinson@outlook.com"}
+]
+dynamic = ["version", "dependencies"]
+
+[project.scripts]
+actions = "cli.main:main"
+
+[options]
+exclude = ["tests"]
+
+[tool.setuptools.dynamic]
+version = { attr = "config.__version__" }
+dependencies = { file = "requirements.txt" }
