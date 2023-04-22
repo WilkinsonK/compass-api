@@ -1,44 +1,20 @@
-import enum, typing
+import enum
 from datetime import datetime as datetime_t
 
-from sqlalchemy import BINARY, Boolean, DateTime, ForeignKey, String, UUID, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import BINARY, Boolean, DateTime, ForeignKey, String
 
-from orm.bases import BaseObject, EnumObject, HistoricalObject
-from orm.bases import UUID, UUID_t
+from orm.bases import mapped_column, relationship
+from orm.bases import BaseObject, EnumMixIn, HistoricalMixIn, IdMixIn
+from orm.bases import UserOwnerMixIn, MappedUUID, MappedStr, Mapped
 
 # Dummy types. We replace these in other object
 # files.
-ServiceTicket = typing.NewType("ServiceTicket", object)
 
 
 # --------------------------------------------- #
 # User Objects.
 # --------------------------------------------- #
-class User(HistoricalObject, BaseObject):
-    __tablename__ = "users"
-
-    id:        Mapped[UUID_t] = mapped_column(UUID(), primary_key=True)
-    role:      Mapped[str] = mapped_column(ForeignKey("user_role.name"))
-    status:    Mapped[str] = mapped_column(ForeignKey("user_status.name"))
-    is_active: Mapped[bool] = mapped_column(Boolean())
-
-    # Object relationsips
-    user_contacts: Mapped["UserContact"] = relationship\
-    (
-        back_populates="users",
-        cascade="all, delete-orphan"
-    )
-    user_sessions: Mapped[list["UserSession"]] = relationship\
-    (
-        back_populates="users",
-        cascade="all, delete-orphan"
-    )
-    service_tickets: Mapped[list["ServiceTicket"]] = relationship\
-    (back_populates="users")
-
-
-class UserRole(EnumObject, BaseObject):
+class UserRole(EnumMixIn, BaseObject):
     __tablename__ = "user_role"
     # Kinds:
     # AUTHORIZED
@@ -52,7 +28,7 @@ class UserRoleEnum(enum.StrEnum):
     SERVICE = enum.auto()
 
 
-class UserStatus(EnumObject, BaseObject):
+class UserStatus(EnumMixIn, BaseObject):
     __tablename__ = "user_status"
     # Kinds:
     # DISABLED
@@ -68,52 +44,82 @@ class UserStatusEnum(enum.StrEnum):
     ENABLED = enum.auto()
 
 
-class UserSession(HistoricalObject, BaseObject):
+class UserSession(HistoricalMixIn, UserOwnerMixIn, BaseObject):
     __tablename__ = "user_sessions"
 
-    id:       Mapped[bytes] = mapped_column(BINARY(128), primary_key=True)
-    owner_id: Mapped[UUID_t] = mapped_column(ForeignKey("users.id"))
-    ipaddress:  Mapped[str] = mapped_column(String(15))
-
+    id: Mapped[bytes] = mapped_column("id", BINARY(128), primary_key=True)
+    ipaddress: MappedStr = mapped_column("ipaddress", String(15))
     invalid_on: Mapped[datetime_t] = mapped_column\
     (
-        DateTime(False),
-        insert_default=func.current_timestamp(),
-        default=None
+        "invalid_on",
+        DateTime(False)
     )
 
+
+class UserEmail(BaseObject, IdMixIn, HistoricalMixIn):
+    __tablename__ = "user_email_addresses"
+
+    owner_id: MappedUUID = mapped_column("owner_id", ForeignKey("users.id"))
+    contact_id: MappedUUID = mapped_column("contact_id", ForeignKey("user_contacts.owner_id"))
+    value: MappedStr = mapped_column("value", String(128))
+
     # Object relationships
-    users: Mapped["User"] = relationship(back_populates="user_sessions")
+    user_contacts: Mapped["UserContact"] = relationship( #type: ignore
+        "UserContact",
+        back_populates=__tablename__
+    )
 
 
-class UserContact(HistoricalObject, BaseObject):
+class UserContact(BaseObject, UserOwnerMixIn, HistoricalMixIn):
     __tablename__ = "user_contacts"
 
-    owner_id: Mapped[UUID_t] = mapped_column\
+    owner_id: MappedUUID = mapped_column\
     (
+        "owner_id",
         ForeignKey("users.id"),
         primary_key=True
     )
-    username: Mapped[str] = mapped_column(String(128))
-    first_name: Mapped[str] = mapped_column(String(64))
-    last_name: Mapped[str] = mapped_column(String(64))
-    phone_number: Mapped[typing.Optional[str]] = mapped_column(String(10))
+    username: MappedStr = mapped_column("username", String(128))
+    first_name: MappedStr = mapped_column("first_name", String(64))
+    last_name: MappedStr = mapped_column("last_name", String(64))
+    phone_number: MappedStr = mapped_column("phone_number", String(10))
 
     # Object relationships.
-    users: Mapped["User"] = relationship(back_populates="user_contacts")
     user_email_addresses: Mapped[list["UserEmail"]] = relationship\
-    (back_populates="user_contacts", cascade="all, delete-orphan")
+    (
+        UserEmail,
+        collection_class=list,
+        back_populates=__tablename__,
+        cascade="all, delete-orphan"
+    )
+    
 
+class User(BaseObject, IdMixIn, HistoricalMixIn):
+    __tablename__ = "users"
 
-class UserEmail(HistoricalObject, BaseObject):
-    __tablename__ = "user_email_addresses"
+    role: MappedUUID = mapped_column(ForeignKey("user_role.name"))
+    status: MappedUUID = mapped_column("status", ForeignKey("user_status.name"))
+    is_active: Mapped[bool] = mapped_column("is_active", Boolean())
+    hashed_password: Mapped[bytes] = mapped_column("hashed_password", BINARY(512))
 
-    id: Mapped[UUID_t] = mapped_column(UUID(), primary_key=True)
-    owner_id: Mapped[UUID_t] = mapped_column(ForeignKey("users.id"))
-    contact_id: Mapped[UUID_t] = mapped_column\
-        (ForeignKey("user_contacts.owner_id"))
-    value: Mapped[str] = mapped_column(String(128))
-
-    # Object relationships>
+    # Object relationsips
     user_contacts: Mapped["UserContact"] = relationship\
-    (back_populates="user_email_addresses")
+    (
+        "UserContact",
+        back_populates=__tablename__,
+        cascade="all, delete-orphan"
+    )
+
+    user_sessions: Mapped[list["UserSession"]] = relationship\
+    (
+        UserSession,
+        collection_class=list,
+        back_populates=__tablename__,
+        cascade="all, delete-orphan"
+    )
+
+    service_tickets: Mapped[list["ServiceTicket"]] = relationship( #type: ignore
+        "ServiceTicket",
+        collection_class=list,
+        back_populates="users"
+    )

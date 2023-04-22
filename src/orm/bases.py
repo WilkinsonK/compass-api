@@ -1,46 +1,66 @@
+import typing
 from datetime import datetime as datetime_t
 from uuid import UUID as UUID_t
 
-from sqlalchemy import DateTime, Integer, String, UUID, func
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy import DateTime, ForeignKey, String, UUID
+from sqlalchemy.orm import MappedAsDataclass, DeclarativeBase, Mapped
+from sqlalchemy.orm import MappedColumn, mapped_column, relationship
+from sqlalchemy.ext.declarative import declared_attr
 
 import config
 
 if config.DEVELOPMENT_MODE:
     from sqlalchemy import Uuid as UUID
 
+MappedUUID = Mapped[UUID_t]
+MappedUUIDColumn = MappedColumn[UUID_t]
+MappedStr = Mapped[str]
 
-class BaseObject(DeclarativeBase):
+
+class BaseObject(MappedAsDataclass, DeclarativeBase):
 
     def __repr__(self):
         fields = self.__annotations__.keys()
         fields = " ".join([f"{f}={getattr(self, f)}" for f in fields])
         return f"{self.__class__.__name__}[{fields}]"
+    
 
+class EnumMixIn(object):
 
-class HistoricalObject:
-    created_at: Mapped[datetime_t] = mapped_column\
-    (
-        DateTime(False),
-        insert_default=func.current_timestamp(),
-        default=None
-    )
-    updated_on: Mapped[datetime_t] = mapped_column\
-    (
-        DateTime(False),
-        insert_default=func.current_timestamp(),
-        default=None
-    )
-
-
-class EnumObject:
-    value: Mapped[int] = mapped_column\
-    (
-        Integer,
-        primary_key=True,
-        autoincrement=True
-    )
-    name:  Mapped[str] = mapped_column(String(16))
+    name: MappedStr = mapped_column("name", String(16), primary_key=True)
 
     def __repr__(self):
         return "ENUM:" + super().__repr__()
+
+
+class HistoricalMixIn(object):
+        
+    created_at: Mapped[datetime_t] = mapped_column\
+    (
+        "created_on",
+        DateTime(False),
+    )
+
+    updated_on: Mapped[datetime_t] = mapped_column\
+    (
+        "updated_on",
+        DateTime(False)
+    )
+
+
+class IdMixIn(object):
+
+    @declared_attr
+    def id(cls) -> MappedUUIDColumn:
+        return mapped_column("id", UUID(), primary_key=True)
+
+
+class UserOwnerMixIn(object):
+
+    @declared_attr
+    def owner_id(cls) -> UUID_t:
+        return mapped_column("owner_id", ForeignKey("users.id"))
+    
+    @declared_attr
+    def users(cls):
+        return relationship("User", back_populates=cls.__tablename__)

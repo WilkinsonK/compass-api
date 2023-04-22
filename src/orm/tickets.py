@@ -1,22 +1,20 @@
-import enum, typing
+import enum
 
 from sqlalchemy import ForeignKey, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from orm.bases import BaseObject, EnumObject, HistoricalObject
-from orm.bases import UUID, UUID_t
+from orm.bases import declared_attr, mapped_column, relationship
+from orm.bases import BaseObject, EnumMixIn, HistoricalMixIn, IdMixIn
+from orm.bases import UserOwnerMixIn
 
 
 # Dummy types. We replace these in other object
 # files.
-Message = typing.NewType("Message", object)
-User = typing.NewType("User", object)
 
 
 # --------------------------------------------- #
 # Ticket Objects.
 # --------------------------------------------- #
-class TicketKind(EnumObject, BaseObject):
+class TicketKind(EnumMixIn, BaseObject):
     __tablename__ = "ticket_kinds"
     # Kinds:
     # INCIDENT
@@ -28,7 +26,7 @@ class TicketKindEnum(enum.StrEnum):
     SERVICE = enum.auto()
 
 
-class TicketStatus(EnumObject, BaseObject):
+class TicketStatus(EnumMixIn, BaseObject):
     __tablename__ = "ticket_status"
     # Kinds:
     # UNASSIGNED
@@ -48,18 +46,32 @@ class TicketStatusEnum(enum.StrEnum):
     COMPLETED = enum.auto()
 
 
-class ServiceTicket(HistoricalObject, BaseObject):
+class ServiceTicket(IdMixIn, HistoricalMixIn, UserOwnerMixIn, BaseObject):
     __tablename__ = "service_tickets"
 
-    id: Mapped[UUID_t] = mapped_column(UUID(), primary_key=True)
-    owner_id: Mapped[UUID_t] = mapped_column(ForeignKey("users.id"))
-    short_description: Mapped[str] = mapped_column(String(64))
-    long_description:  Mapped[str] = mapped_column(String(512))
-    kind:   Mapped[str] = mapped_column(ForeignKey("ticket_kinds.name"))
-    status: Mapped[str] = mapped_column(ForeignKey("ticket_status.name"))
+    @declared_attr
+    def short_description(cls):
+        return mapped_column("short_description", String(64))
+
+    @declared_attr
+    def long_description(cls):
+        return mapped_column("long_description", String(512))
+
+    @declared_attr
+    def kind(cls):
+        return mapped_column("kind", ForeignKey("ticket_kinds.name"))
+
+    @declared_attr
+    def status(cls):
+        return mapped_column("status", ForeignKey("ticket_status.name"))
 
     # Object relationships
-    users: Mapped["User"] = relationship\
-        (back_populates="service_tickets")
-    messages: Mapped[list["Message"]] = relationship\
-        (back_populates="service_tickets", cascade="all, delete-orphan")
+    @declared_attr
+    def messages(cls):
+        return relationship\
+        (
+            "Message",
+            collection_class=list,
+            back_populates="service_tickets",
+            cascade="all, delete-orphan"
+        )
