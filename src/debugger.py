@@ -24,7 +24,7 @@ def debug(fn):
 
         return rt
 
-    if config.DEVELOPMENT_MODE in (config.DEV_BASIC, config.DEV_DEBUG):
+    if config.DEVELOPMENT_MODE is config.DEV_BASIC | config.DEV_DEBUG:
         return inner
     return fn
 
