@@ -1,4 +1,3 @@
-import base64
 import typing
 
 from fastapi import Depends, HTTPException, Request
@@ -10,9 +9,15 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import api.txllayer, common, config, models
 from api.app import api_main
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 RA = typing.TypeVar("RA")
-RequiresAuth = typing.Annotated[RA, Depends(oauth2_scheme)]
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+def decode_token(token: typing.Annotated[RA, Depends(oauth2_scheme)]):
+    return common.decode_token(token)
+
+
+RequiresAuth = typing.Annotated[RA, Depends(decode_token)]
 RequiresAuthForm = typing.Annotated[OAuth2PasswordRequestForm, Depends()]
 
 
@@ -61,40 +66,6 @@ async def authenticate_user_form(
 
     session = api.txllayer.create_new_session(users[0], request)
     return session
-
-
-async def get_current_user(token: RequiresAuth[bytes]):
-    token = common.decode_token(token)
-    users = api.txllayer.do_user_lookup(session_id=token)
-    if not users:
-        raise HTTPException\
-        (
-            status_code=400,
-            detail="Invalid authentication credentials.",
-            headers={"WWW-Authenticate": "Bearer"}
-        )
-
-    status = models.users.UserStatusEnum(users[0].status)
-    enabled = models.users.UserStatusEnum.ENABLED
-    if status is not enabled:
-        raise HTTPException\
-        (
-            status_code=403,
-            detail="Not allowed to access this service.",
-        )
-    
-    if not users[0].is_active:
-        raise HTTPException\
-        (
-            status_code=401,
-            detail="Not active user.",
-        )
-
-    return users[0]
-
-
-RequiresCurrentUser =\
-    typing.Annotated[models.users.UserM, Depends(get_current_user)]
 
 
 @api_main.post("/token")

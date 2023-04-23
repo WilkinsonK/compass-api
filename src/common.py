@@ -1,4 +1,4 @@
-import base64, datetime, functools, logging, secrets, sys, uuid
+import base64, datetime, secrets, sys, uuid
 import typing
 
 HashAlgorithm = typing.Callable[[str | bytes], bytes]
@@ -17,38 +17,12 @@ def current_timestamp():
     return datetime.datetime.now()
 
 
-def debug(fn):
-    """
-    Wraps some function with a logger. Reraises
-    exceptions with additional information.
-    """
-
-    logger = logging.getLogger("uvicorn.error")
-
-    @functools.wraps(fn)
-    def inner(*args, **kwds):
-        fn_name = fn.__qualname__
-        try:
-            rt = fn(*args, **kwds)
-            logger.info(f"{fn_name} RT value: {rt!r}")
-        except Exception as e:
-            logger.error(f"{fn_name} failed with args: {args}")
-            logger.error(f"{fn_name} failed with kwds: {kwds}")
-            raise DebugError(f"failed with exception:", str(e), error=e)
-
-        return rt
-    
-    return inner
-
-
-@debug
 def decode_token(token: str):
     """Make token consumable by the ORM."""
 
     return base64.urlsafe_b64decode(token)
 
 
-@debug
 def encode_token(token: bytes):
     """Make token consumable by the user."""
 
@@ -126,6 +100,24 @@ def rotate_password_hash(
     return password
 
 
+def sanitize_dict(
+        mapping: dict[str, typing.Any],
+        blacklist: typing.Iterable[str],
+        *,
+        nested_char: str | None = None):
+    """Remove target fields from a mapping."""
+
+    nested_char = nested_char or "."
+    for field in blacklist:
+        parent, *child = field.split(nested_char, maxsplit=1)
+        if child:
+            sanitize_dict(mapping[parent], child)
+            continue
+        mapping.pop(field)
+
+    return mapping
+
+
 def unsigned(value: int):
     """
     Ensures the passed value does not go below 0.
@@ -157,20 +149,3 @@ def validate_dependant_args(**kwds):
 
     raise ValueError\
         (f"{missing} must be included if value(s) {present} are passed")
-
-
-class DebugError(Exception):
-    
-    def __init__(
-            self,
-            *values: str,
-            sep: str | None = None,
-            error: Exception | None = None):
-        self.message = (sep or " ").join(values)
-        self.exception = error
-
-        if error:
-            raise error from self
-
-    def __str__(self):
-        return self.message

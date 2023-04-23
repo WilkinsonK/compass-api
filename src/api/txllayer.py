@@ -6,7 +6,8 @@ interface.
 import dataclasses, typing
 from uuid import UUID
 
-from fastapi import Request
+from fastapi import HTTPException, Request
+from sqlalchemy.exc import IntegrityError
 
 import common, config, models, orm
 
@@ -21,7 +22,9 @@ def consume_orm_object(obj: orm.bases.BaseObject):
 
 
 def consume_pyd_object(
-        obj: models.bases.CompassModel | typing.Any) -> dict[str, typing.Any]:
+        obj: models.bases.CompassModel | typing.Any,
+        *,
+        blacklist: typing.Iterable[str] | None = None) -> dict[str, typing.Any]:
     """
     Breaks down a Pydantic model object into a
     python mapping.
@@ -31,7 +34,7 @@ def consume_pyd_object(
     for name, value in obj.items():
         if isinstance(value, models.bases.CompassModel):
             obj[name] = consume_pyd_object(value)
-    return obj
+    return common.sanitize_dict(obj, blacklist)
 
 
 def consume_orm2pyd(
@@ -81,9 +84,9 @@ def do_user_lookup(
         username: str | None = None,
         hashed_password: bytes | None = None,
         user_id: str | UUID | None = None,
-        session_id: str | UUID | None = None,
+        session_id: bytes = None,
         *,
-        expects_unique: bool | None = False):
+        expects_unique: bool | None = None):
     """
     Queries the database for users that match
     the given parameters.
@@ -102,8 +105,7 @@ def do_user_lookup(
         stmt = stmt.where(
             orm.users.User.id == common.parse_uuid(user_id))
     if session_id:
-        stmt = stmt.where(
-            orm.users.UserSession.id == session_id)
+        stmt = stmt.where(orm.users.UserSession.id == session_id)
 
     users = []
     with orm.orm_session() as session:
@@ -144,8 +146,15 @@ def create_new_session(user: models.users.UserM, request: Request):
 
     # TODO: Need to update at the user level.
     with orm.orm_session() as session:
-        session.add(consume_pyd2orm(pyd_session, orm.users.UserSession))
-        session.execute(stmt)
+        try:
+            session.add(consume_pyd2orm(pyd_session, orm.users.UserSession))
+            session.execute(stmt)
+        except IntegrityError as e:
+            raise e from HTTPException\
+            (
+                status_code=409,
+                detail="Session already exists."
+            )
         session.commit()
 
     return pyd_session

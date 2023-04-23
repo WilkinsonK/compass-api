@@ -4,9 +4,9 @@ Management tools and objects for database ORM.
 
 from datetime import datetime
 
-import config
+from sqlalchemy.exc import IntegrityError
 
-import common, orm
+import common, config, orm
 from orm import bases, messages, tickets, users
 from orm.engine import orm_engine, orm_session, select, update, delete
 
@@ -49,8 +49,11 @@ def initialize():
         # Initialize Enumeration objects.
         # TODO: automate the below.
         with orm_session() as session:
-            session.add_all(record_buffer)
-            session.commit()
+            try:
+                session.add_all(record_buffer)
+                session.commit()
+            except IntegrityError:
+                session.rollback()
 
         # Refresh the record buffer.
         record_buffer.clear()
@@ -82,5 +85,8 @@ def initialize():
     )
 
     with orm_session() as session:
-        session.add(admin_inst)
-        session.commit()
+        try:
+            session.add(admin_inst)
+            session.commit()
+        except IntegrityError:
+            session.rollback()
