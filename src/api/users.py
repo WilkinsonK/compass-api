@@ -4,7 +4,7 @@ from fastapi import HTTPException, Depends
 # Only import the Pydantic `models` at this level.
 # Any interactions with the orm should happen at
 # the txllayer.
-import api.txllayer, models
+import api.txllayer, config, models
 from api import oauth
 from api.app import api_main
 
@@ -24,7 +24,10 @@ async def get_current_user(token: oauth.RequiresAuth[bytes]):
             headers={"WWW-Authenticate": "Bearer"}
         )
 
-    status = models.users.UserStatusEnum(users[0].status)
+    user = users[0]
+    api.txllayer.validate_sessions(user)
+
+    status = models.users.UserStatusEnum(user.status)
     enabled = models.users.UserStatusEnum.ENABLED
     if status is not enabled:
         raise HTTPException\
@@ -33,7 +36,6 @@ async def get_current_user(token: oauth.RequiresAuth[bytes]):
             detail="Not allowed to access this service.",
         )
 
-    user = users[0]
     if not user.is_active:
         raise HTTPException\
         (

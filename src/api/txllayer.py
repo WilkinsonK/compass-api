@@ -150,6 +150,7 @@ def create_new_session(user: models.users.UserM, request: Request):
             session.add(consume_pyd2orm(pyd_session, orm.users.UserSession))
             session.execute(stmt)
         except IntegrityError as e:
+            session.rollback()
             raise e from HTTPException\
             (
                 status_code=409,
@@ -158,6 +159,84 @@ def create_new_session(user: models.users.UserM, request: Request):
         session.commit()
 
     return pyd_session
+
+
+def create_new_user(
+    password: str | bytes,
+    username: str,
+    email_address: str,
+    first_name: str | None = None,
+    last_name: str | None = None,
+    role: orm.users.UserRoleEnum | None = None,
+    status: orm.users.UserStatus | None = None):
+
+    init_time = common.current_timestamp()
+    user_id = common.new_uuid()
+    user_password =\
+    (
+        password if isinstance(bytes)
+        else common.rotate_password_hash(config.SECURITY_PASSWORD_HASHES)
+    )
+
+    with orm.orm_session() as session:
+        email_addresses = session.scalar\
+        (
+            orm.select(orm.users.UserEmail)
+                .where(orm.users.UserEmail.value == email_address)
+        )
+        if email_addresses:
+            raise HTTPException\
+            (
+                status_code=409,
+                detail=f"User already exists with email {email_address}"
+            )
+
+    pyd_user = models.users.UserM\
+    (
+        id=user_id,
+        role=(role or models.users.UserRoleEnum.AUTHORIZED),
+        status=(status or models.users.UserStatusEnum.UNVERIFIED),
+        is_active=False,
+        hashed_password=user_password,
+        user_contacts=models.users.UserContactM
+        (
+            owner_id=user_id,
+            username=username,
+            first_name=(first_name or ""),
+            last_name=(last_name or ""),
+            user_email_addresses=
+            [
+                models.users.UserEmailM
+                (
+                    id=common.new_uuid(),
+                    owner_id=user_id,
+                    value=email_address,
+                    created_at=init_time,
+                    updated_on=init_time
+                )
+            ],
+            created_at=init_time,
+            updated_on=init_time
+        ),
+        user_sessions=[],
+        service_tickets=[],
+        created_at=init_time,
+        updated_on=init_time
+    )
+
+    with orm.orm_session() as session:
+        try:
+            session.add(consume_user2orm(pyd_user))
+            session.commit()
+        except IntegrityError as e:
+            session.rollback()
+            raise e from HTTPException\
+            (
+                status_code=409,
+                detail="User already exists."
+            )
+        
+    return pyd_user
 
 
 def validate_sessions(

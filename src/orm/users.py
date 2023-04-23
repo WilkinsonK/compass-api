@@ -57,7 +57,6 @@ class UserEmail(BaseObject, IdMixIn, HistoricalMixIn):
     __tablename__ = "user_email_addresses"
 
     owner_id: MappedUUID = mapped_column("owner_id", ForeignKey("users.id"))
-    contact_id: MappedUUID = mapped_column("contact_id", ForeignKey("user_contacts.owner_id"))
     value: MappedStr = mapped_column("value", String(128))
 
     # Object relationships
