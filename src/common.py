@@ -79,10 +79,10 @@ def encode_token(token: bytes):
     return base64.urlsafe_b64encode(token)
 
 
-def decode_token(token: bytes):
+def decode_token(token: str):
     """Make token consumable by the ORM."""
 
-    return base64.urlsafe_b64decode(token.decode())
+    return base64.urlsafe_b64decode(token)
 
 
 def new_uuid():

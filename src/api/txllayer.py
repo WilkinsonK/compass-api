@@ -103,7 +103,7 @@ def do_user_lookup(
             orm.users.User.id == common.parse_uuid(user_id))
     if session_id:
         stmt = stmt.where(
-            orm.users.UserSession.id == common.parse_uuid(session_id))
+            orm.users.UserSession.id == session_id)
 
     users = []
     with orm.orm_session() as session:
