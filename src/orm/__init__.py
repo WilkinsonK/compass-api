@@ -8,7 +8,7 @@ import config
 
 import common, orm
 from orm import bases, messages, tickets, users
-from orm.engine import orm_engine, orm_session, select, update
+from orm.engine import orm_engine, orm_session, select, update, delete
 
 __all__ = (
 (
@@ -18,7 +18,9 @@ __all__ = (
     "initialize",
     "orm_engine",
     "orm_session",
-    "select"
+    "select",
+    "update",
+    "delete"
 ))
 
 

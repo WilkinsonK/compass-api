@@ -41,6 +41,7 @@ DEVELOPMENT_MODE =\
 
 SECURITY_PASSWORD_HASHES = ()
 SECURITY_SESSION_TTL = {"minutes": 30}
+SECURITY_MAX_SESSIONS = common.unsigned(5)
 
 # Application specific constants. These are not
 # meant to change at runtime in prodution.

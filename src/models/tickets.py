@@ -2,7 +2,7 @@ from models.bases import HistoricalModel, VarCharField, UUIDField
 from orm.tickets import TicketKindEnum, TicketStatusEnum
 
 
-class ServiceTicket(HistoricalModel):
+class ServiceTicketM(HistoricalModel):
     id: UUIDField
     owner_id: UUIDField
     short_description: VarCharField(str, 64)

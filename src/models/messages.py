@@ -1,7 +1,7 @@
 from models.bases import HistoricalModel, VarCharField, UUIDField
 
 
-class Message(HistoricalModel):
+class MessageM(HistoricalModel):
     id: UUIDField
     ticket_id: UUIDField
     owner_id: UUIDField

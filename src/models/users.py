@@ -1,46 +1,46 @@
 from models.bases import HistoricalModel, VarCharField, UUIDField, \
     DateTimeField, UUIDField
-from models.tickets import ServiceTicket
+from models.tickets import ServiceTicketM
 from orm.users import UserRoleEnum, UserStatusEnum
 
 
-class User(HistoricalModel):
+class UserM(HistoricalModel):
     id: UUIDField
     role: UserRoleEnum
     status: UserStatusEnum
     is_active: bool
     hashed_password: bytes
-    user_contacts: "UserContact"
-    user_sessions: list["UserSession"]
-    service_tickets: list["ServiceTicket"]
+    user_contacts: "UserContactM"
+    user_sessions: list["UserSessionM"]
+    service_tickets: list["ServiceTicketM"]
 
 
-class UserSession(HistoricalModel):
+class UserSessionM(HistoricalModel):
     id: VarCharField(bytes, 128)
     owner_id: UUIDField
     ipaddress: VarCharField(str, 15)
     invalid_on: DateTimeField
 
 
-class UserContact(HistoricalModel):
+class UserContactM(HistoricalModel):
     owner_id: UUIDField
-    user_email_addresses: list["UserEmail"]
+    user_email_addresses: list["UserEmailM"]
     username: VarCharField(str, 128)
     first_name: VarCharField(str, 64)
     last_name: VarCharField(str, 64)
     phone_number: VarCharField(str, 10)
 
 
-class UserEmail(HistoricalModel):
+class UserEmailM(HistoricalModel):
     id: UUIDField
     owner_id: UUIDField
     contact_id: UUIDField
-    user_contacts: UserContact
+    user_contacts: UserContactM
     value: VarCharField(str, 128)
 
 
-User.update_forward_refs()
-UserContact.update_forward_refs()
+UserM.update_forward_refs()
+UserContactM.update_forward_refs()
 
 if __name__ == "__main__":
     import dataclasses, hashlib, pprint, uuid
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         updated_on=DateTimeField.now()
     )
 
-    pyd_user = User(**dataclasses.asdict(orm_user))
+    pyd_user = UserM(**dataclasses.asdict(orm_user))
     pprint.pp(pyd_user)
 
     orm_user = pyd_user.dict()

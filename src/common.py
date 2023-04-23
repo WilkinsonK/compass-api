@@ -1,46 +1,32 @@
-import datetime, secrets, uuid
+import base64, datetime, secrets, sys, uuid
 import typing
 
 HashAlgorithm = typing.Callable[[str | bytes], bytes]
 HashPackage = typing.Iterable[HashAlgorithm]
 
 
+def unsigned(value: int):
+    """
+    Ensures the passed value does not go below 0.
+    Instead, similates integer overflow and loop
+    back around to the next largest value
+    relative
+    to the given value.
+
+    i.e. `-1 == maxsize - 1`
+      or `-5 == maxsize - 5`
+    and etc.
+    """
+
+    if value < 0:
+        return sys.maxsize + value
+    return value
+
+
 def basic_password_hash(password: str | bytes) -> bytes:
     if isinstance(password, bytes):
         return password
     return password.encode()
-
-
-def rotate_password_hash(
-        password: str | bytes,
-        *hashes: HashAlgorithm) -> bytes:
-    """
-    Iterates over a sequence of hashing
-    algorithms on a single string (password)
-    value and returns its result in bytes.
-    """
-
-    hashes += (basic_password_hash,)
-    for phash in hashes:
-        password = phash(password)
-    return password
-
-
-def new_session_token(_uuid: uuid.UUID | None = None):
-    """
-    Generates a new token for a user session.
-    """
-
-    token = secrets.token_bytes(128 if not _uuid else 111)
-    return b":".join([_uuid.bytes, token])
-
-
-def new_uuid():
-    """
-    Generates a new UUID for an object or model.
-    """
-
-    return uuid.uuid4()
 
 
 def current_timestamp():
@@ -65,6 +51,7 @@ def future_timestamp(
     delta = datetime.timedelta\
     (
         days=days or 0.0,
+        seconds=seconds or 0.0,
         microseconds=microseconds or 0.0,
         milliseconds=milliseconds or 0.0,
         minutes=minutes or 0.0,
@@ -73,3 +60,74 @@ def future_timestamp(
     )
 
     return current_timestamp() + delta
+
+
+def new_session_token(_uuid: uuid.UUID | None = None):
+    """
+    Generates a new token for a user session.
+    """
+
+    token = secrets.token_urlsafe(128 if not _uuid else 71)
+    if _uuid:
+        token = b":".join([_uuid.hex.encode(), token.encode()])
+    return token
+
+
+def encode_token(token: bytes):
+    """Make token consumable by the user."""
+
+    return base64.urlsafe_b64encode(token)
+
+
+def decode_token(token: bytes):
+    """Make token consumable by the ORM."""
+
+    return base64.urlsafe_b64decode(token.decode())
+
+
+def new_uuid():
+    """
+    Generates a new UUID for an object or model.
+    """
+
+    return uuid.uuid4()
+
+
+def parse_uuid(value: str | bytes | uuid.UUID):
+    """Parses the given value as a UUID."""
+
+    if isinstance(value, str):
+        return uuid.UUID(value)
+    if isinstance(value, bytes):
+        return uuid.UUID(bytes=value)
+    return value
+
+
+def rotate_password_hash(
+        password: str | bytes,
+        *hashes: HashAlgorithm) -> bytes:
+    """
+    Iterates over a sequence of hashing
+    algorithms on a single string (password)
+    value and returns its result in bytes.
+    """
+
+    hashes += (basic_password_hash,)
+    for phash in hashes:
+        password = phash(password)
+    return password
+
+
+def validate_dependant_args(**kwds):
+    """
+    Verifies that if any of the values passed are
+    truthy that, then, all values are truthy.
+    """
+
+    if not (any(kwds.values()) and not all(kwds.values())):
+        return
+    present = [name for name, v in kwds.items() if v]
+    missing = [name for name, v in kwds.items() if not v]
+
+    raise ValueError\
+        (f"{missing} must be included if value(s) {present} are passed")

@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 
-import api.oauth, config, orm
+import api.oauth, common, config, orm
 
 
 STARTUP_TASKS =\
@@ -26,7 +26,11 @@ async def login(
     """Attempt to authenticate as some user."""
 
     session = await api.oauth.authenticate_user_form(form_data, request)
-    return {"acces_token": session.id, "token_type": "bearer"}
+    return\
+    {
+        "acces_token": common.encode_token(session.id),
+        "token_type": "bearer"
+    }
 
 
 @app.get("/users/me")

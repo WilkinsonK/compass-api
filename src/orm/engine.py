@@ -1,7 +1,7 @@
 import contextlib
 
 import sqlalchemy, sqlalchemy.orm
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 
 import config
 
