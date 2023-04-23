@@ -105,6 +105,6 @@ async def login(
     session = await authenticate_user_form(form_data, request)
     return\
     {
-        "acces_token": common.encode_token(session.id),
+        "access_token": common.encode_token(session.id),
         "token_type": "bearer"
     }

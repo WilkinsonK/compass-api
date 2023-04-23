@@ -1,26 +1,8 @@
-import base64, datetime, secrets, sys, uuid
+import base64, datetime, functools, logging, secrets, sys, uuid
 import typing
 
 HashAlgorithm = typing.Callable[[str | bytes], bytes]
 HashPackage = typing.Iterable[HashAlgorithm]
-
-
-def unsigned(value: int):
-    """
-    Ensures the passed value does not go below 0.
-    Instead, similates integer overflow and loop
-    back around to the next largest value
-    relative
-    to the given value.
-
-    i.e. `-1 == maxsize - 1`
-      or `-5 == maxsize - 5`
-    and etc.
-    """
-
-    if value < 0:
-        return sys.maxsize + value
-    return value
 
 
 def basic_password_hash(password: str | bytes) -> bytes:
@@ -33,6 +15,44 @@ def current_timestamp():
     """Gets the current timestamp."""
 
     return datetime.datetime.now()
+
+
+def debug(fn):
+    """
+    Wraps some function with a logger. Reraises
+    exceptions with additional information.
+    """
+
+    logger = logging.getLogger("uvicorn.error")
+
+    @functools.wraps(fn)
+    def inner(*args, **kwds):
+        fn_name = fn.__qualname__
+        try:
+            rt = fn(*args, **kwds)
+            logger.info(f"{fn_name} RT value: {rt!r}")
+        except Exception as e:
+            logger.error(f"{fn_name} failed with args: {args}")
+            logger.error(f"{fn_name} failed with kwds: {kwds}")
+            raise DebugError(f"failed with exception:", str(e), error=e)
+
+        return rt
+    
+    return inner
+
+
+@debug
+def decode_token(token: str):
+    """Make token consumable by the ORM."""
+
+    return base64.urlsafe_b64decode(token)
+
+
+@debug
+def encode_token(token: bytes):
+    """Make token consumable by the user."""
+
+    return base64.urlsafe_b64encode(token)
 
 
 def future_timestamp(
@@ -73,18 +93,6 @@ def new_session_token(_uuid: uuid.UUID | None = None):
     return token
 
 
-def encode_token(token: bytes):
-    """Make token consumable by the user."""
-
-    return base64.urlsafe_b64encode(token)
-
-
-def decode_token(token: str):
-    """Make token consumable by the ORM."""
-
-    return base64.urlsafe_b64decode(token)
-
-
 def new_uuid():
     """
     Generates a new UUID for an object or model.
@@ -118,6 +126,24 @@ def rotate_password_hash(
     return password
 
 
+def unsigned(value: int):
+    """
+    Ensures the passed value does not go below 0.
+    Instead, similates integer overflow and loop
+    back around to the next largest value
+    relative
+    to the given value.
+
+    i.e. `-1 == maxsize - 1`
+      or `-5 == maxsize - 5`
+    and etc.
+    """
+
+    if value < 0:
+        return sys.maxsize + value
+    return value
+
+
 def validate_dependant_args(**kwds):
     """
     Verifies that if any of the values passed are
@@ -131,3 +157,20 @@ def validate_dependant_args(**kwds):
 
     raise ValueError\
         (f"{missing} must be included if value(s) {present} are passed")
+
+
+class DebugError(Exception):
+    
+    def __init__(
+            self,
+            *values: str,
+            sep: str | None = None,
+            error: Exception | None = None):
+        self.message = (sep or " ").join(values)
+        self.exception = error
+
+        if error:
+            raise error from self
+
+    def __str__(self):
+        return self.message
