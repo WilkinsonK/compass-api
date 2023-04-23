@@ -8,6 +8,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 # Any interactions with the orm should happen at
 # the txllayer.
 import api.txllayer, common, config, models
+from api.app import api_main
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 RA = typing.TypeVar("RA")
@@ -94,3 +95,16 @@ async def get_current_user(token: RequiresAuth[bytes]):
 
 RequiresCurrentUser =\
     typing.Annotated[models.users.UserM, Depends(get_current_user)]
+
+
+@api_main.post("/token")
+async def login(
+    form_data: RequiresAuthForm, request: Request):
+    """Attempt to authenticate as some user."""
+
+    session = await authenticate_user_form(form_data, request)
+    return\
+    {
+        "acces_token": common.encode_token(session.id),
+        "token_type": "bearer"
+    }

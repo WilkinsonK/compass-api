@@ -30,7 +30,7 @@ def main_cli():
 )
 def start(*, host: str, port: str, reload: bool):
     """Starts the API server instance."""
-    uvicorn.run("api:app", host=host, port=port, reload=reload)
+    uvicorn.run("api:api_main", host=host, port=port, reload=reload)
 
 
 if __name__ == "__main__":
