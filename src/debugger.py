@@ -1,4 +1,4 @@
-import functools, logging
+import functools, logging, pprint
 
 import config
 
@@ -16,7 +16,7 @@ def debug(fn):
         fn_name = fn.__qualname__
         try:
             rt = fn(*args, **kwds)
-            logger.info(f"{fn_name} RT value: {rt!r}")
+            logger.info(f"{fn_name} RT value: {pprint.pformat(rt)}")
         except Exception as e:
             logger.error(f"{fn_name} failed with args: {args}")
             logger.error(f"{fn_name} failed with kwds: {kwds}")
@@ -24,7 +24,7 @@ def debug(fn):
 
         return rt
 
-    if config.DEVELOPMENT_MODE is config.DEV_BASIC | config.DEV_DEBUG:
+    if config.DEVELOPMENT_MODE in config.DEV_BASIC | config.DEV_DEBUG:
         return inner
     return fn
 

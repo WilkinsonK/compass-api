@@ -6,7 +6,7 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 # Only import the Pydantic `models` at this level.
 # Any interactions with the orm should happen at
 # the txllayer.
-import api.txllayer, common, config, models
+import common, config, models, txllayer
 from api.app import api_main
 
 RA = typing.TypeVar("RA")
@@ -29,7 +29,7 @@ def user_can_request_session(user: models.users.UserM):
     return ((len(user.user_sessions) + 1) <= config.SECURITY_MAX_SESSIONS)
 
 
-async def authenticate_user_form(
+def authenticate_user_form(
         form: RequiresAuthForm,
         request: Request,
         *,
@@ -40,7 +40,7 @@ async def authenticate_user_form(
     match.
     """
 
-    users = api.txllayer.do_user_lookup\
+    users = txllayer.do_user_lookup\
     (
         form.username,
         common.rotate_password_hash(form.password, *(hash_package or [])),
@@ -56,7 +56,7 @@ async def authenticate_user_form(
 
     # If we were to add a new session, would this
     # cause us an issue?
-    api.txllayer.validate_sessions(users[0])
+    txllayer.validate_user_sessions(users[0])
     if not user_can_request_session(users[0]):
         raise HTTPException\
         (
@@ -64,7 +64,7 @@ async def authenticate_user_form(
             detail="Too many active sessions."
         )
 
-    session = api.txllayer.create_new_session(users[0], request)
+    session = txllayer.create_new_session(users[0], request)
     return session
 
 
@@ -73,9 +73,10 @@ async def login(
     form_data: RequiresAuthForm, request: Request):
     """Attempt to authenticate as some user."""
 
-    session = await authenticate_user_form(form_data, request)
+    session = authenticate_user_form(form_data, request)
     return\
     {
         "access_token": common.encode_token(session.id),
+        "expires_on": session.invalid_on,
         "token_type": "bearer"
     }
