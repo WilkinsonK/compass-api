@@ -2,9 +2,9 @@ import enum
 
 from sqlalchemy import ForeignKey, String
 
-from orm.bases import mapped_column, relationship
-from orm.bases import BaseObject, EnumMixIn, HistoricalMixIn, IdMixIn
-from orm.bases import UserOwnerMixIn, MappedStr
+from models.orm.bases import mapped_column, relationship
+from models.orm.bases import BaseObject, EnumMixIn, HistoricalMixIn, IdMixIn
+from models.orm.bases import UserOwnerMixIn, MappedStr
 
 
 # Dummy types. We replace these in other object

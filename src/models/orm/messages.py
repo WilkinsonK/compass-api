@@ -2,7 +2,7 @@ from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.ext.declarative import declared_attr
 
-from orm.bases import BaseObject, HistoricalMixIn, IdMixIn, MappedUUID
+from models.orm.bases import BaseObject, HistoricalMixIn, IdMixIn, MappedUUID
 
 # Dummy types. We replace these in other object
 # files.

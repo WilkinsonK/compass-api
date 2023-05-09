@@ -1,7 +1,8 @@
 import dataclasses 
 import typing
 
-import common, models, orm
+import common
+from models import orm, pyd
 
 
 def consume_orm_object(obj: orm.bases.BaseObject):
@@ -14,7 +15,7 @@ def consume_orm_object(obj: orm.bases.BaseObject):
 
 
 def consume_pyd_object(
-        obj: models.bases.CompassModel | typing.Any,
+        obj: pyd.bases.CompassModel | typing.Any,
         *,
         blacklist: typing.Iterable[str] | None = None) -> dict[str, typing.Any]:
     """
@@ -24,21 +25,21 @@ def consume_pyd_object(
 
     obj = obj.dict()
     for name, value in obj.items():
-        if isinstance(value, models.bases.CompassModel):
+        if isinstance(value, pyd.bases.CompassModel):
             obj[name] = consume_pyd_object(value)
     return common.sanitize_dict(obj, blacklist or [])
 
 
 def consume_orm2pyd(
         obj: orm.bases.BaseObject,
-        pyd_cls: type[models.bases.CompassModel]):
+        pyd_cls: type[pyd.bases.CompassModel]):
     """Digests some ORM into a model instance."""
 
     return pyd_cls(**consume_orm_object(obj))
 
 
 def consume_pyd2orm(
-        obj: models.bases.CompassModel,
+        obj: pyd.bases.CompassModel,
         orm_cls: type[orm.bases.BaseObject]):
     """
     Digests some model into an ORM instance.
@@ -47,7 +48,7 @@ def consume_pyd2orm(
     return orm_cls(**consume_pyd_object(obj))
 
 
-def consume_user2orm(user: models.users.UserM):
+def consume_user2orm(user: pyd.users.UserM):
     """Consume some User model into User ORM."""
 
     user = consume_pyd_object(user)
@@ -69,4 +70,4 @@ def consume_user2orm(user: models.users.UserM):
 def consume_user2pyd(user: orm.users.User):
     """Consume some User ORM into User model."""
 
-    return models.users.UserM(**consume_orm_object(user))
+    return pyd.users.UserM(**consume_orm_object(user))

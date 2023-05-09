@@ -6,9 +6,10 @@ from datetime import datetime
 
 from sqlalchemy.exc import IntegrityError
 
-import common, config, orm
-from orm import bases, messages, tickets, users
-from orm.engine import orm_engine, orm_session, select, update, delete
+import common, config
+from models import orm
+from models.orm import bases, messages, tickets, users
+from models.orm.engine import orm_engine, orm_session, select, update, delete
 
 __all__ = (
 (

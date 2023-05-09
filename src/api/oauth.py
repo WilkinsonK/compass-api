@@ -6,7 +6,8 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 # Only import the Pydantic `models` at this level.
 # Any interactions with the orm should happen at
 # the txllayer.
-import common, config, models, txllayer
+import common, config, models
+from models import pyd
 from api.app import api_main
 
 RA = typing.TypeVar("RA")
@@ -21,7 +22,7 @@ RequiresAuth = typing.Annotated[RA, Depends(decode_token)]
 RequiresAuthForm = typing.Annotated[OAuth2PasswordRequestForm, Depends()]
 
 
-def user_can_request_session(user: models.users.UserM):
+def user_can_request_session(user: pyd.users.UserM):
     """
     Validates the number of sessions a User has.
     """
@@ -40,7 +41,7 @@ def authenticate_user_form(
     match.
     """
 
-    users = txllayer.do_user_lookup\
+    users = models.do_user_lookup\
     (
         form.username,
         common.rotate_password_hash(form.password, *(hash_package or [])),
@@ -56,7 +57,7 @@ def authenticate_user_form(
 
     # If we were to add a new session, would this
     # cause us an issue?
-    txllayer.validate_user_sessions(users[0])
+    models.validate_user_sessions(users[0])
     if not user_can_request_session(users[0]):
         raise HTTPException\
         (
@@ -64,7 +65,7 @@ def authenticate_user_form(
             detail="Too many active sessions."
         )
 
-    session = txllayer.create_new_session(users[0], request)
+    session = models.create_new_session(users[0], request)
     return session
 
 

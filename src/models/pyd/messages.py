@@ -1,4 +1,4 @@
-from models.bases import HistoricalModel, VarCharField, UUIDField
+from models.pyd.bases import HistoricalModel, VarCharField, UUIDField
 
 
 class MessageM(HistoricalModel):

@@ -1,5 +1,7 @@
 from fastapi import FastAPI
-from compass_common import config, models.orm
+
+import config
+from models import orm
 
 
 STARTUP_TASKS =\

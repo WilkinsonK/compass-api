@@ -3,8 +3,8 @@ Pydantic2SQLAlchemy translation layer and
 interface.
 """
 
-from txllayer import digest, sessions, users
-from txllayer.digest import\
+from models import digest, sessions, users
+from models.digest import\
 (
     consume_orm2pyd,
     consume_orm_object,
@@ -13,12 +13,12 @@ from txllayer.digest import\
     consume_user2orm,
     consume_user2pyd
 )
-from txllayer.sessions import\
+from models.sessions import\
 (
     create_new_session,
     validate_user_sessions
 )
-from txllayer.users import\
+from models.users import\
 (
     create_new_user,
     do_user_lookup

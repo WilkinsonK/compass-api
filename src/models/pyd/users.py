@@ -1,7 +1,7 @@
-from models.bases import HistoricalModel, VarCharField, UUIDField, \
+from models.pyd.bases import HistoricalModel, VarCharField, UUIDField, \
     DateTimeField, UUIDField
-from models.tickets import ServiceTicketM
-from orm.users import UserRoleEnum, UserStatusEnum
+from models.pyd.tickets import ServiceTicketM
+from models.orm.users import UserRoleEnum, UserStatusEnum
 
 
 class UserM(HistoricalModel):

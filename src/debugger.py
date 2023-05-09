@@ -15,6 +15,7 @@ def debug(fn):
     def inner(*args, **kwds):
         fn_name = fn.__qualname__
         try:
+            logger.info(f"{fn_name} callargs: {args=} {kwds=}")
             rt = fn(*args, **kwds)
             logger.info(f"{fn_name} RT value: {pprint.pformat(rt)}")
         except Exception as e:

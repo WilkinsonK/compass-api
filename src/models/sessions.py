@@ -3,12 +3,12 @@ from uuid import UUID
 from fastapi import HTTPException, Request
 from sqlalchemy.exc import IntegrityError
 
-import common, config, models, orm
-from txllayer import digest
+import common, config
+from models import digest, orm, pyd
 
 
-def create_new_session(user: models.users.UserM, request: Request):
-    pyd_session = models.users.UserSessionM\
+def create_new_session(user: pyd.users.UserM, request: Request):
+    pyd_session = pyd.users.UserSessionM\
     (
         id=common.new_session_token(user.id),
         owner_id=user.id,
@@ -47,7 +47,7 @@ def create_new_session(user: models.users.UserM, request: Request):
 
 
 def validate_user_sessions(
-        user: models.users.UserM,
+        user: pyd.users.UserM,
         session_id: str | UUID | None = None,
         request: Request | None = None):
     """

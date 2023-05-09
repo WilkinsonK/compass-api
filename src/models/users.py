@@ -3,8 +3,8 @@ from uuid import UUID
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 
-import common, config, models, orm
-from txllayer import digest
+import common, config
+from models import digest, orm, pyd
 
 
 def create_new_user(
@@ -37,14 +37,14 @@ def create_new_user(
                 detail=f"User already exists with email {email_address}"
             )
 
-    pyd_user = models.users.UserM\
+    pyd_user = pyd.users.UserM\
     (
         id=user_id,
-        role=(role or models.users.UserRoleEnum.AUTHORIZED),
-        status=(status or models.users.UserStatusEnum.UNVERIFIED),
+        role=(role or pyd.users.UserRoleEnum.AUTHORIZED),
+        status=(status or pyd.users.UserStatusEnum.UNVERIFIED),
         is_active=False,
         hashed_password=user_password,
-        user_contacts=models.users.UserContactM
+        user_contacts=pyd.users.UserContactM
         (
             owner_id=user_id,
             username=username,
@@ -52,7 +52,7 @@ def create_new_user(
             last_name=(last_name or ""),
             user_email_addresses=
             [
-                models.users.UserEmailM
+                pyd.users.UserEmailM
                 (
                     id=common.new_uuid(),
                     owner_id=user_id,
@@ -128,4 +128,4 @@ def do_user_lookup(
             "users when expecting only one."
         )
 
-    return [models.users.UserM(**user) for user in users]
+    return [pyd.users.UserM(**user) for user in users]

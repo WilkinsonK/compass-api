@@ -1,5 +1,5 @@
-from models.bases import HistoricalModel, VarCharField, UUIDField
-from orm.tickets import TicketKindEnum, TicketStatusEnum
+from models.pyd.bases import HistoricalModel, VarCharField, UUIDField
+from models.orm.tickets import TicketKindEnum, TicketStatusEnum
 
 
 class ServiceTicketM(HistoricalModel):

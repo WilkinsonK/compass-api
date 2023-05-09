@@ -1,4 +1,3 @@
-import typing
 from datetime import datetime as datetime_t
 from uuid import UUID as UUID_t
 

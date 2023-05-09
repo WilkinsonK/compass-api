@@ -4,13 +4,14 @@ from fastapi import HTTPException, Depends
 # Only import the Pydantic `models` at this level.
 # Any interactions with the orm should happen at
 # the txllayer.
-import models, txllayer
+import models
+from models import pyd
 from api import oauth
 from api.app import api_main
 
 
 async def get_current_user(token: oauth.RequiresAuth[bytes]):
-    users = txllayer.do_user_lookup\
+    users = models.do_user_lookup\
     (
         session_id=token,
         expects_unique=True
@@ -25,10 +26,10 @@ async def get_current_user(token: oauth.RequiresAuth[bytes]):
         )
 
     user = users[0]
-    txllayer.validate_user_sessions(user)
+    models.validate_user_sessions(user)
 
-    status = models.users.UserStatusEnum(user.status)
-    enabled = models.users.UserStatusEnum.ENABLED
+    status = pyd.users.UserStatusEnum(user.status)
+    enabled = pyd.users.UserStatusEnum.ENABLED
     if status is not enabled:
         raise HTTPException\
         (
@@ -50,11 +51,11 @@ async def get_current_user(token: oauth.RequiresAuth[bytes]):
         "user_sessions",
         "service_tickets"
     )
-    return txllayer.consume_pyd_object(user, blacklist=blacklist)
+    return models.consume_pyd_object(user, blacklist=blacklist)
 
 
 RequiresCurrentUser =\
-    typing.Annotated[models.users.UserM, Depends(get_current_user)]
+    typing.Annotated[pyd.users.UserM, Depends(get_current_user)]
 
 
 @api_main.get("/users/me")

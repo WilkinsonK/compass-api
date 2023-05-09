@@ -3,9 +3,9 @@ from datetime import datetime as datetime_t
 
 from sqlalchemy import BINARY, Boolean, DateTime, ForeignKey, String
 
-from orm.bases import mapped_column, relationship
-from orm.bases import BaseObject, EnumMixIn, HistoricalMixIn, IdMixIn
-from orm.bases import UserOwnerMixIn, MappedUUID, MappedStr, Mapped
+from models.orm.bases import mapped_column, relationship
+from models.orm.bases import BaseObject, EnumMixIn, HistoricalMixIn, IdMixIn
+from models.orm.bases import UserOwnerMixIn, MappedUUID, MappedStr, Mapped
 
 
 # --------------------------------------------- #
