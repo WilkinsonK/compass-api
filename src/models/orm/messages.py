@@ -1,8 +1,8 @@
 from sqlalchemy import ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.ext.declarative import declared_attr
 
-from models.orm.bases import BaseObject, HistoricalMixIn, IdMixIn, MappedUUID
+from models.bases import ORMBase
+from models.orm.bases import HistoricalMixIn, IdMixIn, MappedUUID
 
 # Dummy types. We replace these in other object
 # files.
@@ -11,7 +11,7 @@ from models.orm.bases import BaseObject, HistoricalMixIn, IdMixIn, MappedUUID
 # --------------------------------------------- #
 # Message Objects.
 # --------------------------------------------- #
-class Message(IdMixIn, HistoricalMixIn, BaseObject):
+class Message(IdMixIn, HistoricalMixIn, ORMBase):
     __tablename__ = "messages"
 
     ticket_id: MappedUUID = mapped_column("ticket_id", ForeignKey("service_tickets.id"))

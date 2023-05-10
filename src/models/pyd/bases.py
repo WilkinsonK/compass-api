@@ -1,8 +1,9 @@
 import typing
-from uuid import UUID as UUID_t
 
-from datetime import datetime as datetime_t
-from pydantic import BaseConfig , BaseModel, Field
+from pydantic import Field
+
+from common import datetime_t, UUID_t
+from models.bases import PYDBase
 
 __all__ = (
     "CompassModel",
@@ -19,13 +20,6 @@ def VarCharField(_type: type[T], size: int, **kwds):
     return typing.Annotated[_type, Field(max_length=size, **kwds)]
 
 
-class CompassModel(BaseModel):
-
-    class Config(BaseConfig):
-        orm_mode = True
-        use_enum_values = True
-
-
-class HistoricalModel(CompassModel):
+class HistoricalModel(PYDBase):
     created_at: DateTimeField
     updated_on: DateTimeField

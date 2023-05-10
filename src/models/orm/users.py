@@ -3,15 +3,16 @@ from datetime import datetime as datetime_t
 
 from sqlalchemy import BINARY, Boolean, DateTime, ForeignKey, String
 
+from models.bases import ORMBase
 from models.orm.bases import mapped_column, relationship
-from models.orm.bases import BaseObject, EnumMixIn, HistoricalMixIn, IdMixIn
+from models.orm.bases import EnumMixIn, HistoricalMixIn, IdMixIn
 from models.orm.bases import UserOwnerMixIn, MappedUUID, MappedStr, Mapped
 
 
 # --------------------------------------------- #
 # User Objects.
 # --------------------------------------------- #
-class UserRole(EnumMixIn, BaseObject):
+class UserRole(EnumMixIn, ORMBase):
     __tablename__ = "user_role"
     # Kinds:
     # AUTHORIZED
@@ -25,7 +26,7 @@ class UserRoleEnum(enum.StrEnum):
     SERVICE = enum.auto()
 
 
-class UserStatus(EnumMixIn, BaseObject):
+class UserStatus(EnumMixIn, ORMBase):
     __tablename__ = "user_status"
     # Kinds:
     # DISABLED
@@ -41,7 +42,7 @@ class UserStatusEnum(enum.StrEnum):
     ENABLED = enum.auto()
 
 
-class UserSession(HistoricalMixIn, UserOwnerMixIn, BaseObject):
+class UserSession(HistoricalMixIn, UserOwnerMixIn, ORMBase):
     __tablename__ = "user_sessions"
 
     id: Mapped[bytes] = mapped_column("id", BINARY(128), primary_key=True)
@@ -53,9 +54,10 @@ class UserSession(HistoricalMixIn, UserOwnerMixIn, BaseObject):
     )
 
 
-class UserEmail(BaseObject, IdMixIn, HistoricalMixIn):
+class UserEmail(ORMBase, IdMixIn, HistoricalMixIn):
     __tablename__ = "user_email_addresses"
 
+    is_primary: Mapped[bool] = mapped_column("is_primary", Boolean(), default=False, primary_key=True)
     owner_id: MappedUUID = mapped_column("owner_id", ForeignKey("users.id"))
     contact_id: MappedUUID = mapped_column("contact_id", ForeignKey("user_contacts.owner_id"))
     value: MappedStr = mapped_column("value", String(128))
@@ -67,7 +69,7 @@ class UserEmail(BaseObject, IdMixIn, HistoricalMixIn):
     )
 
 
-class UserContact(BaseObject, UserOwnerMixIn, HistoricalMixIn):
+class UserContact(ORMBase, UserOwnerMixIn, HistoricalMixIn):
     __tablename__ = "user_contacts"
 
     owner_id: MappedUUID = mapped_column\
@@ -91,7 +93,7 @@ class UserContact(BaseObject, UserOwnerMixIn, HistoricalMixIn):
     )
     
 
-class User(BaseObject, IdMixIn, HistoricalMixIn):
+class User(ORMBase, IdMixIn, HistoricalMixIn):
     __tablename__ = "users"
 
     role: Mapped["UserRole"] = mapped_column(ForeignKey("user_role.name"))

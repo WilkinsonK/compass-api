@@ -1,28 +1,20 @@
-from datetime import datetime as datetime_t
-from uuid import UUID as UUID_t
-
-from sqlalchemy import DateTime, ForeignKey, String, UUID
-from sqlalchemy.orm import MappedAsDataclass, DeclarativeBase, Mapped
+from sqlalchemy import DateTime, ForeignKey, String
+from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import MappedColumn, mapped_column, relationship
 from sqlalchemy.ext.declarative import declared_attr
 
 import config
+from common import datetime_t, UUID_t
 
 if config.DEVELOPMENT_MODE:
     from sqlalchemy import Uuid as UUID
+else:
+    from sqlalchemy import UUID #type: ignore[assignment]
 
 MappedUUID = Mapped[UUID_t]
 MappedUUIDColumn = MappedColumn[UUID_t]
 MappedStr = Mapped[str]
 
-
-class BaseObject(MappedAsDataclass, DeclarativeBase):
-
-    def __repr__(self):
-        fields = self.__annotations__.keys()
-        fields = " ".join([f"{f}={getattr(self, f)}" for f in fields])
-        return f"{self.__class__.__name__}[{fields}]"
-    
 
 class EnumMixIn(object):
 
@@ -52,9 +44,9 @@ class IdMixIn(object):
 
 class UserOwnerMixIn(object):
 
-    @declared_attr
+    @declared_attr #type: ignore[arg-type]
     def owner_id(cls) -> UUID_t:
-        return mapped_column("owner_id", ForeignKey("users.id"))
+        return mapped_column("owner_id", ForeignKey("users.id")) #type: ignore[return-value]
     
     @declared_attr
     def users(cls):

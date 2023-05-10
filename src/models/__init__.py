@@ -1,45 +1,17 @@
 """
-Pydantic2SQLAlchemy translation layer and
-interface.
+models.py
+
+Pydantic2SQLAlchemy translation layer, objects, and interface. This
+abstraction carries the responsibility of defining the data models
+used in `Compass`, their roles in the connected database and at
+runtime.
 """
 
-from models import digest, sessions, users
-from models.digest import\
-(
-    consume_orm2pyd,
-    consume_orm_object,
-    consume_pyd2orm,
-    consume_pyd_object,
-    consume_user2orm,
-    consume_user2pyd
-)
-from models.sessions import\
-(
-    create_new_session,
-    validate_user_sessions
-)
-from models.users import\
-(
-    create_new_user,
-    do_user_lookup
-)
+from txllayer import register_txl, retrieve_txl, translate
 
 __all__ =\
 (
-    "digest",
-    "sessions",
-    "users",
-
-    "consume_orm2pyd",
-    "consume_orm_object",
-    "consume_pyd2orm",
-    "consume_pyd_object",
-    "consume_user2orm",
-    "consume_user2pyd",
-
-    "create_new_session",
-    "validate_user_sessions",
-
-    "create_new_user",
-    "do_user_lookup",
+    "register_txl",
+    "retrieve_txl",
+    "translate"
 )

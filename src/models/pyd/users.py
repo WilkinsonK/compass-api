@@ -16,27 +16,28 @@ class UserM(HistoricalModel):
 
 
 class UserSessionM(HistoricalModel):
-    id: VarCharField(bytes, 128)
+    id: VarCharField(bytes, 128) #type: ignore[valid-type]
     owner_id: UUIDField
-    ipaddress: VarCharField(str, 15)
+    ipaddress: VarCharField(str, 15) #type: ignore[valid-type]
     invalid_on: DateTimeField
 
 
 class UserContactM(HistoricalModel):
     owner_id: UUIDField
     user_email_addresses: list["UserEmailM"]
-    username: VarCharField(str, 128)
-    first_name: VarCharField(str, 64)
-    last_name: VarCharField(str, 64)
-    phone_number: VarCharField(str, 10)
+    username: VarCharField(str, 128) #type: ignore[valid-type]
+    first_name: VarCharField(str, 64) #type: ignore[valid-type]
+    last_name: VarCharField(str, 64) #type: ignore[valid-type]
+    phone_number: VarCharField(str, 10) #type: ignore[valid-type]
 
 
 class UserEmailM(HistoricalModel):
     id: UUIDField
+    is_primary: bool
     owner_id: UUIDField
     contact_id: UUIDField
     user_contacts: UserContactM
-    value: VarCharField(str, 128)
+    value: VarCharField(str, 128) #type: ignore[valid-type]
 
 
 UserM.update_forward_refs()

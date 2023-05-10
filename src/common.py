@@ -1,6 +1,9 @@
 import base64, datetime, secrets, sys, uuid
 import typing
 
+from datetime import datetime as datetime_t # This is proxied from here.
+from uuid import UUID as UUID_t # This is proxied from here.
+
 HashAlgorithm = typing.Callable[[str | bytes], bytes]
 HashPackage = typing.Iterable[HashAlgorithm]
 

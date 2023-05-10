@@ -2,8 +2,9 @@ import enum
 
 from sqlalchemy import ForeignKey, String
 
+from models.bases import ORMBase
 from models.orm.bases import mapped_column, relationship
-from models.orm.bases import BaseObject, EnumMixIn, HistoricalMixIn, IdMixIn
+from models.orm.bases import EnumMixIn, HistoricalMixIn, IdMixIn
 from models.orm.bases import UserOwnerMixIn, MappedStr
 
 
@@ -14,7 +15,7 @@ from models.orm.bases import UserOwnerMixIn, MappedStr
 # --------------------------------------------- #
 # Ticket Objects.
 # --------------------------------------------- #
-class TicketKind(EnumMixIn, BaseObject):
+class TicketKind(EnumMixIn, ORMBase):
     __tablename__ = "ticket_kinds"
     # Kinds:
     # INCIDENT
@@ -26,7 +27,7 @@ class TicketKindEnum(enum.StrEnum):
     SERVICE = enum.auto()
 
 
-class TicketStatus(EnumMixIn, BaseObject):
+class TicketStatus(EnumMixIn, ORMBase):
     __tablename__ = "ticket_status"
     # Kinds:
     # UNASSIGNED
@@ -46,7 +47,7 @@ class TicketStatusEnum(enum.StrEnum):
     COMPLETED = enum.auto()
 
 
-class ServiceTicket(IdMixIn, HistoricalMixIn, UserOwnerMixIn, BaseObject):
+class ServiceTicket(IdMixIn, HistoricalMixIn, UserOwnerMixIn, ORMBase):
     __tablename__ = "service_tickets"
 
     short_description: MappedStr = mapped_column("short_description", String(64))
